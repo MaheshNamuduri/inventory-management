@@ -396,6 +396,5 @@ def init_db():
     finally:
         cursor.close()
         conn.close()
-
 if __name__ == '__main__':
     app.run(debug=True)
