@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>AI Stock Suggestions</h1>
+    <ul class="list-group mb-3">
+        {% for name, qty, trend in suggestions %}
+        <li class="list-group-item">
+            Restock <strong>{{ name }}</strong> with {{ qty }} units (Daily Sell Rate: {{ trend }})
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}

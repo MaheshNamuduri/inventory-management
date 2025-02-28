@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1 class="text-center">Inventory Dashboard</h1>
+    <form method="POST" class="mb-3">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by name" value="{{ request.form.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if cat == request.form.category %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="checkbox" name="low_stock" id="low_stock" value="1" {% if request.form.low_stock %}checked{% endif %}>
+                <label for="low_stock">Low Stock (<5)</label>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Search/Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Initial Stock</th>
+                <th>Remaining Stock</th>
+                <th>Price (₹)</th>
+                <th>Category</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item[0] }}</td>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td {% if item[3] < 5 %}class="text-danger fw-bold"{% endif %}>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+                <td>{{ item[5] }}</td>
+                <td>
+                    {% if role == 'admin' %}
+                    <a href="{{ url_for('edit_item', id=item[0]) }}" class="btn btn-warning btn-sm">Edit</a>
+                    {% endif %}
+                    <a href="{{ url_for('sell_item', id=item[0]) }}" class="btn btn-primary btn-sm {% if item[3] == 0 %}disabled{% endif %}">Sell</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="text-center mt-4" style="font-weight: bold; color: #343a40;">Analysis</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Stock Levels (Bar Chart)</h3>
+            <canvas id="stockChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h3>Top Sold Items (Pie Chart)</h3>
+            <canvas id="topSoldChart"></canvas>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='charts.js') }}"></script>
+    <script>
+        // @ts-ignore: Jinja2 template syntax
+        const stockData = {{ stock_data | tojson }};
+        // @ts-ignore: Jinja2 template syntax
+        const topSold = {{ top_sold | tojson }};
+        drawCharts(stockData, topSold);
+    </script>
+{% endblock %}
