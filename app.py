@@ -43,11 +43,10 @@ def load_user(user_id):
 
 def get_db_connection():
     try:
-        return psycopg2.connect(os.getenv("DATABASE_URL"))
+        return psycopg2.connect(os.getenv("${{ Postgres.DATABASE_URL }}"))
     except Error as e:
         print(f"Database connection failed: {e}")
         return None
-
 def send_low_stock_email(low_items):
     sender = 'your_actual_email@gmail.com'  # Replace with your email
     receiver = 'your_actual_email@gmail.com'  # Replace with your email
