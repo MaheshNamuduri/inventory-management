@@ -379,8 +379,8 @@ def init_db():
         if not os.path.exists('inventory_db.sql'):
             print("File error: inventory_db.sql not found")
             return "File error: inventory_db.sql not found", 500
-        with open('inventory_db.sql', 'rb') as f:  # Read as binary
-            sql_content = f.read().decode('utf-8-sig')  # Decode with BOM handling
+        with open('inventory_db.sql', 'rb') as f:
+            sql_content = f.read().decode('utf-8-sig')
             print(f"Executing SQL: {sql_content[:100]}...")
             cursor.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
             cursor.execute(sql_content)
