@@ -9,14 +9,6 @@ from email.mime.text import MIMEText
 from stock_predict import predict_stock_needs
 import os
 
-def get_db_connection():
-    try:
-        
-        return psycopg2.connect(os.getenv("DATABASE_URL"))
-    except Error as e:
-        print(f"Database connection failed: {e}")
-        return None
-
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Change this in production
 
@@ -51,15 +43,15 @@ def load_user(user_id):
 
 def get_db_connection():
     try:
-        return psycopg2.connect(dbname="inventory_db", user="postgres", password="mahesh.123", host="localhost", port="5432")
+        return psycopg2.connect(os.getenv("DATABASE_URL"))
     except Error as e:
         print(f"Database connection failed: {e}")
         return None
 
 def send_low_stock_email(low_items):
-    sender = 'your_email@gmail.com'  # Replace with your email
-    receiver = 'your_email@gmail.com'  # Replace with your email
-    password = 'your_app_password'    # Use Gmail App Password if 2FA is on
+    sender = 'your_actual_email@gmail.com'  # Replace with your email
+    receiver = 'your_actual_email@gmail.com'  # Replace with your email
+    password = 'your_app_password'    # Replace with your Gmail App Password
     msg = MIMEText(f"Low stock items detected:\n{', '.join([f'{item[1]} ({item[3]} units)' for item in low_items])}")
     msg['Subject'] = 'Low Stock Alert - Inventory Manager'
     msg['From'] = sender
@@ -308,7 +300,7 @@ def import_csv():
                     cursor = conn.cursor()
                     stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
                     csv_reader = csv.reader(stream)
-                    next(csv_reader)  # Skip header
+                    next(csv_reader)
                     for row in csv_reader:
                         cursor.execute("INSERT INTO items (id, name, initial_stock, remaining_stock, price, category) VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (id) DO NOTHING",
                                        (int(row[0]), row[1], int(row[2]), int(row[3]), float(row[4]), row[5]))
@@ -374,6 +366,24 @@ def manage_categories():
     finally:
         cursor.close()
         conn.close()
+
+@app.route('/init_db')
+def init_db():
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            with open('inventory_db.sql', 'r') as f:
+                cursor.execute(f.read())
+            conn.commit()
+            return "Database initialized successfully", 200
+        except Error as e:
+            print(f"Init DB error: {e}")
+            return f"Error initializing database: {e}", 500
+        finally:
+            cursor.close()
+            conn.close()
+    return "Database connection failed", 500
 
 if __name__ == '__main__':
     app.run(debug=True)
