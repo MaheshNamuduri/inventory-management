@@ -88,6 +88,12 @@ def login():
             cursor.close()
             conn.close()
     return render_template('login.html')
+def get_db_connection():
+    try:
+        return psycopg2.connect(os.getenv("DATABASE_URL"))
+    except Error as e:
+        print(f"Database connection failed: {e}")
+        return None
 
 @app.route('/logout')
 @login_required
@@ -373,9 +379,11 @@ def init_db():
     if conn:
         try:
             cursor = conn.cursor()
+            print("Starting database initialization")
             with open('inventory_db.sql', 'r') as f:
                 cursor.execute(f.read())
             conn.commit()
+            print("Database initialized successfully")
             return "Database initialized successfully", 200
         except Error as e:
             print(f"Init DB error: {e}")
@@ -383,6 +391,7 @@ def init_db():
         finally:
             cursor.close()
             conn.close()
+    print("Database connection failed in init_db")
     return "Database connection failed", 500
 
 if __name__ == '__main__':
