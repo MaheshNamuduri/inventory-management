@@ -88,12 +88,6 @@ def login():
             cursor.close()
             conn.close()
     return render_template('login.html')
-def get_db_connection():
-    try:
-        return psycopg2.connect(os.getenv("DATABASE_URL"))
-    except Error as e:
-        print(f"Database connection failed: {e}")
-        return None
 
 @app.route('/logout')
 @login_required
@@ -376,23 +370,32 @@ def manage_categories():
 @app.route('/init_db')
 def init_db():
     conn = get_db_connection()
-    if conn:
-        try:
-            cursor = conn.cursor()
-            print("Starting database initialization")
-            with open('inventory_db.sql', 'r') as f:
-                cursor.execute(f.read())
-            conn.commit()
-            print("Database initialized successfully")
-            return "Database initialized successfully", 200
-        except Error as e:
-            print(f"Init DB error: {e}")
-            return f"Error initializing database: {e}", 500
-        finally:
-            cursor.close()
-            conn.close()
-    print("Database connection failed in init_db")
-    return "Database connection failed", 500
+    if not conn:
+        print("Database connection failed in init_db - DATABASE_URL: " + os.getenv("DATABASE_URL", "Not set"))
+        return "Database connection failed", 500
+    try:
+        cursor = conn.cursor()
+        print("Starting database initialization")
+        if not os.path.exists('inventory_db.sql'):
+            print("File error: inventory_db.sql not found")
+            return "File error: inventory_db.sql not found", 500
+        with open('inventory_db.sql', 'rb') as f:  # Read as binary
+            sql_content = f.read().decode('utf-8-sig')  # Decode with BOM handling
+            print(f"Executing SQL: {sql_content[:100]}...")
+            cursor.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+            cursor.execute(sql_content)
+        conn.commit()
+        print("Database initialized successfully")
+        return "Database initialized successfully", 200
+    except Error as e:
+        print(f"Init DB error: {e}")
+        return f"Error initializing database: {e}", 500
+    except UnicodeDecodeError as e:
+        print(f"Unicode decode error: {e}")
+        return f"Unicode decode error: {e}", 500
+    finally:
+        cursor.close()
+        conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
