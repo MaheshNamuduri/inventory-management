@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Export Inventory</h1>
+<form method="POST" id="exportForm">
+    <p>Download inventory data and charts as a ZIP file.</p>
+    <button type="submit" class="btn btn-primary" onclick="addChartImages()">Export</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+</form>
+<script>
+    function addChartImages() {
+        const images = getChartImages();
+        const form = document.getElementById('exportForm');
+        const stockInput = document.createElement('input');
+        stockInput.type = 'hidden';
+        stockInput.name = 'stock_chart';
+        stockInput.value = images.stockChart;
+        form.appendChild(stockInput);
+
+        const topSoldInput = document.createElement('input');
+        topSoldInput.type = 'hidden';
+        topSoldInput.name = 'top_sold_chart';
+        topSoldInput.value = images.topSoldChart;
+        form.appendChild(topSoldInput);
+    }
+</script>
+{% endblock %}
